@@ -81,25 +81,26 @@ void RepartirCartes(Carta baralla[], int& index_baralla, Jugador& jugador, Jugad
 
 void JugarRonda(Carta baralla[], int& index_baralla, Jugador& jugador, Jugador& ordinador, int& punts_jugador, int& punts_ordinador) {
     // Display player's hand and prompt for choice
-    std::cout << "Your cards are: \n";
+    std::cout << "Les teves cartes són: \n";
     for (int i = 0; i < CARTES_PER_JUGADOR; i++) {
-        std::cout << i << ": ";
+        std::cout << i + 1 << ": ";
         MostrarCarta(jugador.mao[i]);
         std::cout << std::endl;
     }
 
     int choice;
-    do {
-        std::cout << "Choose a card to play (0, 1, 2): ";
-        std::cin >> choice;
-        if (std::cin.fail() || choice < 0 || choice >= CARTES_PER_JUGADOR) {
-            std::cin.clear(); // clear input buffer to restore cin to a usable state
-            std::cin.ignore(INT_MAX, '\n'); // ignore last input
-            std::cout << "You can only enter numbers 0, 1, or 2.\n";
-        }
-    } while (choice < 0 || choice >= CARTES_PER_JUGADOR);
+ 
+    std::cout << "Tria una carta per jugar (1, 2, 3): ";
+    std::cin >> choice;
+    while (std::cin.fail() || choice <= 0 || choice >= CARTES_PER_JUGADOR){
+      std::cin.clear(); // clear input buffer to restore cin to a usable state
+      std::cin.ignore(INT_MAX, '\n'); // ignore last input
+      std::cout << "Només podeu introduir números 1, 2 o 3.\n";
+      std::cin >> choice;
+    }
+   
 
-    Carta carta_jugador = jugador.mao[choice];
+    Carta carta_jugador = jugador.mao[choice - 1];
 
     // Computer selects the highest card in hand
     int highest_index = 0;
@@ -107,31 +108,26 @@ void JugarRonda(Carta baralla[], int& index_baralla, Jugador& jugador, Jugador& 
         if (CompararCartes(ordinador.mao[i], ordinador.mao[highest_index]) == GUANYA_JUGADOR)
             highest_index = i;
     }
-    for (int i = 0; i < CARTES_PER_JUGADOR; i++) {
-      std::cout << i << ": ";
-      MostrarCarta(ordinador.mao[i]);
-      std::cout << std::endl;
-    }
     Carta carta_ordinador = ordinador.mao[highest_index];
     // Show the cards played
-    std::cout << "You play: ";
+    std::cout << "Jugues: ";
     MostrarCarta(carta_jugador);
-    std::cout << "\nComputer plays: ";
+    std::cout << "\nL'ordinador juga: ";
     MostrarCarta(carta_ordinador);
     std::cout << std::endl;
 
   // Compare the cards and update points
     if (CompararCartes(carta_jugador, carta_ordinador) == GUANYA_JUGADOR) {
-        std::cout << "You win the round!\n";
+        std::cout << "Guanyes la ronda!\n";
         punts_jugador += carta_jugador.numero;
     } else {
-        std::cout << "Computer wins the round!\n";
+        std::cout << "L'ordinador guanya la ronda!\n";
         punts_ordinador += carta_ordinador.numero;
     }
 
     // Replace played cards if cards are left in the deck
     if(index_baralla < NUM_CARTES) {
-        jugador.mao[choice] = baralla[index_baralla++];
+        jugador.mao[choice - 1] = baralla[index_baralla++];
         ordinador.mao[highest_index] = baralla[index_baralla++];
     }
 }

@@ -1,233 +1,357 @@
-#include <climits>
 #include <iostream>
 
-#define EMPTY 0
-#define PALS 4
-#define ORS 1
-#define ESPASSES 2
-#define COPES 3
-#define BASTONS 4
-#define SOTA 10
-#define CAVALL 11
-#define REI 12
-#define NUMEROS 12
+#include "utilitats.hpp"
 
-#define NUM_CARTES 3
-#define CARTES_PER_JUGADOR 3
-#define GUANYA_JUGADOR 1
-#define GUANYA_ORDINADOR 2
 
-struct Carta {
-  int pal;
-  int numero;
-};
-
-struct Jugador {
-  Carta mao[CARTES_PER_JUGADOR];
-};
-
-int Aleatori(int NumMin, int NumMax) {
-  return NumMin + (rand() % (NumMax - NumMin + 1));
+void Inicialitzar(Carta cartes[], int nCartes) {
+    for (int index = 0; index < nCartes; index++)
+        cartes[index] = Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
 }
 
-void InicialitzarBaralla(Carta baralla[]) {
-  for (int index_pal = 0; index_pal < PALS; index_pal++)
-    for (int index_num = 0; index_num < NUMEROS; index_num++)
-      baralla[index_pal * NUMEROS + index_num] = {index_pal + 1, index_num + 1};
+void InicialitzarBarallaEspanyolaTest(Carta baralla[]) {
+    for (int index_pal = 0; index_pal < PALS_BARALLA; index_pal++)
+        for (int index_num = 0; index_num < NUMEROS_BARALLA; index_num++)
+            baralla[index_pal * NUMEROS_BARALLA + index_num] = {index_pal + 1, index_num + 1};
 }
 
-void MostrarCarta(Carta carta) {
-
-  if (carta.numero == 0)
-    std::cout << "Empty";
-  else {
-    switch (carta.numero) {
-    case SOTA:
-      std::cout << "Sota";
-      break;
-    case CAVALL:
-      std::cout << "Cavall";
-      break;
-    case REI:
-      std::cout << "Rei";
-      break;
-    default:
-      std::cout << carta.numero;
-      break;
+bool TestInicalitzarBaralla() {
+    std::cout << "Comment :=>>----- TEST: Funció InicialitzarBarallaEspanyola -----" << std::endl;
+    bool testCorrecte = true;
+    Carta baralla[NUM_CARTES_BARALLA];
+    InicialitzarBarallaEspanyola(baralla);
+    for(int index_pal = 0; index_pal < PALS_BARALLA;index_pal++) {
+        for(int index_num = 0; index_num < NUMEROS_BARALLA;index_num++) {
+            Carta carta1 = {index_pal + 1, index_num + 1};
+            Carta carta2 = baralla[index_pal * NUMEROS_BARALLA + index_num];
+            if(carta1.pal != carta2.pal || carta1.numero != carta2.numero)
+             {
+                testCorrecte = false;
+                break;
+            }
+        }
     }
-    std::cout << " de ";
-    switch (carta.pal) {
-    case COPES:
-      std::cout << "Copes";
-      break;
-    case ESPASSES:
-      std::cout << "Espasses";
-      break;
-    case ORS:
-      std::cout << "Ors";
-      break;
-    case BASTONS:
-      std::cout << "Bastons";
-      break;
-    default:
-      break;
+    if(testCorrecte) {
+        std::cout << "Comment :=>> Test InicialitzarBarallaEspanyola: CORRECTE!" << std::endl<< std::endl;
     }
-  }
-  std::cout << std::endl;
-}
-
-bool CompararCartes(Carta carta1, Carta carta2) {
-  if (carta1.numero == carta2.numero)
-    return carta1.pal > carta2.pal;
-  return carta1.numero > carta2.numero;
-}
-
-void Intercanviar(Carta &carta_1, Carta &carta_2) {
-  Carta carta_aux = carta_1;
-  carta_1 = carta_2;
-  carta_2 = carta_aux;
-}
-
-void Remenar(Carta baralla[], int numero_intercanvis) {
-  for (int index = 0; index < numero_intercanvis; index++) {
-    int posicio_carta_1 = Aleatori(0, NUM_CARTES - 1);
-    int posicio_carta_2 = Aleatori(0, NUM_CARTES - 1);
-    if (posicio_carta_1 == posicio_carta_2)
-      continue;
-    Intercanviar(baralla[posicio_carta_1], baralla[posicio_carta_2]);
-  }
-}
-void RepartirCartes(Carta baralla[], Jugador &jugador, Jugador &ordinador) {
-  int index_baralla = 0;
-  for (int i = 0; i < CARTES_PER_JUGADOR; i++) {
-    jugador.mao[i] = baralla[index_baralla++];
-    ordinador.mao[i] = baralla[index_baralla++];
-  }
-}
-
-bool AreThereCardsLeft(Jugador jugador, Jugador ordinador) {
-  for (int i = 0; i < CARTES_PER_JUGADOR; i++) {
-    if (jugador.mao[i].numero != 0 || ordinador.mao[i].numero != 0) {
-      return true;
+    else {
+        std::cout << "Comment :=>> Test InicialitzarBarallaEspanyola: ERROR - Revisa que la funcio InicialitzarBarallaEspanyola es correcte"
+                  << std::endl<< std::endl;
     }
-  }
-  return false;
+    return testCorrecte;
 }
 
-int ObtainPlayerChoice(Jugador jugador) {
-  std::cout << "Les teves cartes són: \n";
-  for (int i = 0; i < CARTES_PER_JUGADOR; i++) {
-    std::cout << i + 1 << ": ";
-    MostrarCarta(jugador.mao[i]);
-  }
+bool TestCartaBuida() {
+    std::cout << "Comment :=>>----- TEST: Funció EsCartaBuida -----" << std::endl;
+    bool testCorrecte = true;
+    Carta carta_buida = {PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
+    if(!EsCartaBuida(carta_buida)) testCorrecte = false;
 
-  int choice;
-  std::cout << "Tria una carta per jugar (1, 2, 3): " << std::endl;
-  std::cin >> choice;
-
-  while (std::cin.fail() || choice <= 0 || choice > CARTES_PER_JUGADOR ||
-         jugador.mao[choice - 1].numero == 0) {
-    std::cin.clear();
-    std::cin.ignore(INT_MAX, '\n');
-    std::cout << "Elecció no vàlida. Torna a triar: " << std::endl;
-    std::cin >> choice;
-  }
-  return choice;
+    Carta baralla[NUM_CARTES_BARALLA];
+    InicialitzarBarallaEspanyola(baralla);
+    for(int index_pal = 0; index_pal < PALS_BARALLA;index_pal++) {
+        for(int index_num = 0; index_num < NUMEROS_BARALLA;index_num++) {
+            Carta carta = baralla[index_pal * NUMEROS_BARALLA + index_num];
+            if (EsCartaBuida(carta)) testCorrecte = false;
+            }
+        }
+    if(testCorrecte) {
+        std::cout << "Comment :=>> Test EsCartaBuida: CORRECTE!" << std::endl<< std::endl;
+    }
+    else {
+        std::cout << "Comment :=>> Test EsCartaBuida: ERROR - Revisa que la funcio EsCartaBuida es correcte"
+                  << std::endl<< std::endl;
+    }
+    return testCorrecte;
 }
 
-int ComputerChoice(Jugador ordinador) {
-  int highest_index = 0;
-  for (int i = 1; i < CARTES_PER_JUGADOR; i++) {
-    if (CompararCartes(ordinador.mao[i], ordinador.mao[highest_index]))
-      highest_index = i;
-  }
-  return highest_index;
+bool TestIndexCarta() {
+    std::cout << "Comment :=>>----- TEST: IndexCartaAmbValor/IndexCartaSenseValor -----" << std::endl;
+    bool testIndexAmbValorCorrecte = true;
+    bool testIndexSenseValorCorrecte = true;
+
+    int tamany_baralla = NUM_CARTES_BARALLA*2;
+    Carta baralla_test[NUM_CARTES_BARALLA*2];
+
+    for(int index = 0; index <= tamany_baralla;index++)
+        baralla_test[index] =  {PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
+
+    // Tota la baralla amb cartes buides
+    if (IndexCartaAmbValor(baralla_test, tamany_baralla) != INDEX_NO_TROBAT)
+        testIndexAmbValorCorrecte = false;
+    if (IndexCartaSenseValor(baralla_test, tamany_baralla) != 0)
+        testIndexSenseValorCorrecte = false;
+
+    // Substituim els valors de la carta d'un a un de buida a valor
+    // Comprovem que els index SenseValor van canviant
+    for(int index = 0; index < tamany_baralla - 1; index++) {
+        baralla_test[index] = Carta{ORS, 1};
+        if (IndexCartaSenseValor(baralla_test, tamany_baralla) != index + 1){
+            testIndexSenseValorCorrecte = false;
+        }
+        if(IndexCartaAmbValor(baralla_test, tamany_baralla) != 0) {
+            testIndexAmbValorCorrecte = false;
+        }
+    }
+
+    // Assignem un valor a l'ultima carta del array (abans no ho hem fet)
+    baralla_test[tamany_baralla - 1] = Carta{ORS, 1};
+
+    // Tota la baralla amb cartes amb valor
+    if (IndexCartaAmbValor(baralla_test, tamany_baralla) != 0)
+        testIndexAmbValorCorrecte = false;
+    if (IndexCartaSenseValor(baralla_test, tamany_baralla) != INDEX_NO_TROBAT)
+        testIndexSenseValorCorrecte = false;
+
+    // Substituim els valors de la carta d'un a un de valor a buida
+    // Comprovem que els index Carta amb valor van canviant
+    for(int index = 0; index < tamany_baralla - 1; index++) {
+        baralla_test[index] = Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
+        if(IndexCartaSenseValor(baralla_test, tamany_baralla) != 0) {
+            testIndexSenseValorCorrecte = false;
+            break;
+        }
+        if(IndexCartaAmbValor(baralla_test, tamany_baralla) != index + 1) {
+            testIndexAmbValorCorrecte = false;
+            break;
+        }
+    }
+
+    // Assignem carta buida a l'ultima carta del array (abans no ho hem fet)
+    baralla_test[tamany_baralla - 1] = Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
+
+    // Substituim els valors de la carta d'un a un de buida a valor
+    // Comprovem que els index SenseValor van canviant
+    for(int index = tamany_baralla - 1; index >= 1; index--) {
+        baralla_test[index] = Carta{ORS, 1};
+        if(IndexCartaSenseValor(baralla_test, tamany_baralla) != 0) {
+            testIndexSenseValorCorrecte = false;
+            break;
+        }
+        if(IndexCartaAmbValor(baralla_test, tamany_baralla) != index) {
+            testIndexAmbValorCorrecte = false;
+            break;
+        }
+    }
+
+    // Assignem carta buida a la primera carta del array (abans no ho hem fet)
+    baralla_test[0] =  Carta{ORS, 1};
+    // Substituim els valors de la carta d'un a un de valor a buida
+    // Comprovem que els index Carta amb valor van canviant
+    for(int index = tamany_baralla - 1; index >= 1; index--) {
+        baralla_test[index] = Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
+        if(IndexCartaSenseValor(baralla_test, tamany_baralla) != index) {
+            testIndexSenseValorCorrecte = false;
+            break;
+        }
+        if(IndexCartaAmbValor(baralla_test, tamany_baralla) != 0) {
+            testIndexAmbValorCorrecte = false;
+            break;
+        }
+    }
+    if(testIndexSenseValorCorrecte && testIndexAmbValorCorrecte) {
+        std::cout << "Comment :=>> Test IndexCartaAmbValor/IndexCartaSenseValor: Correcte!"<<std::endl<< std::endl;
+    }
+    else {
+        if(!testIndexAmbValorCorrecte)
+            std::cout << "Comment :=>> Test IndexCartaAmbValor/IndexCartaSenseValor: ERROR! : Comprova IndexCartaAmbValor"<<std::endl<< std::endl;
+        if(!testIndexSenseValorCorrecte)
+            std::cout << "Comment :=>> Test IndexCartaAmbValor/IndexCartaSenseValor: ERROR! : Comprova IndexCartaSenseValor"<<std::endl<< std::endl;
+    }
+    return testIndexSenseValorCorrecte && testIndexAmbValorCorrecte;
 }
 
-void PlayCards(Carta carta_jugador, Carta carta_ordinador) {
-  std::cout << "Jugues: ";
-  MostrarCarta(carta_jugador);
-  std::cout << "\nL'ordinador juga: ";
-  MostrarCarta(carta_ordinador);
-  std::cout << std::endl;
+bool TestIntercanviar() {
+    std::cout << "Comment :=>>----- TEST: Funció Intercanviar -----" << std::endl;
+
+    bool TestCorrecte = true;
+    int Num0, Num1;
+    int Pal0, Pal1;
+
+    Carta Baralla[NUM_CARTES_BARALLA];
+    InicialitzarBarallaEspanyola(Baralla);
+
+    Num0 = Baralla[0].numero;
+    Pal0 = Baralla[0].pal;
+    Num1 = Baralla[1].numero;
+    Pal1 = Baralla[1].pal;
+
+    Intercanviar(Baralla[0], Baralla[1]);
+
+    if (Baralla[0].numero == Num1 && Baralla[0].pal == Pal1 && Baralla[1].numero == Num0 && Baralla[1].pal == Pal0) {
+        TestCorrecte = TestCorrecte && true;
+        std::cout << "Comment :=>> Test Intercanviar: CORRECTE!" << std::endl << std::endl;
+
+    } else {
+        std::cout << "Comment :=>> Test Intercanviar: ERROR - Revisa les funcions InicialitzarBaralla i Intercanviar." << std::endl << std::endl;
+        TestCorrecte = false;
+    }
+
+    return TestCorrecte;
 }
 
-void AccumulatePoints(Carta carta_jugador, Carta carta_ordinador,
-                      int &punts_jugador, int &punts_ordinador) {
+bool TestRemenar() {
+    std::cout << "Comment :=>>----- TEST: Funcio Remenar -----" << std::endl;
+    bool TestCorrecte = true;
+    int Canvis;
 
-  if (CompararCartes(carta_jugador, carta_ordinador)) {
-    std::cout << "Guanyes la ronda!\n";
-    punts_jugador += carta_jugador.numero;
-  } else {
-    std::cout << "L'ordinador guanya la ronda!\n";
-    punts_ordinador += carta_ordinador.numero;
-  }
+    int seed = 46;
+    srand(seed);
+
+    Carta Baralla1[NUM_CARTES_BARALLA];
+    Carta Baralla2[NUM_CARTES_BARALLA];
+    InicialitzarBarallaEspanyola(Baralla1);
+    InicialitzarBarallaEspanyola(Baralla2);
+
+    Remenar(Baralla1, NUM_CARTES_BARALLA, 0);
+    Canvis = 0;
+    for (int i = 0; i < NUM_CARTES_BARALLA; i++) {
+        if ((Baralla1[i].numero != Baralla2[i].numero) || (Baralla1[i].pal != Baralla2[i].pal)) {
+            Canvis++;
+        }
+    }
+
+    if (Canvis == 0) {
+        TestCorrecte = TestCorrecte && true;
+        std::cout << "Comment :=>> Test Remenar Sense Intercanvis: CORRECTE!" << std::endl;
+    } else {
+        TestCorrecte = false;
+        std::cout << "Comment :=>> Test Remenar Sense Intercanvis: ERROR - Revisa la funcio Remenar. Quin comportament te la funcio quan el NumIntercanvis es 0?" << std::endl;
+    }
+
+
+    Remenar(Baralla1, NUM_CARTES_BARALLA, 10);
+    Canvis = 0;
+    for (int i = 0; i < NUM_CARTES_BARALLA; i++) {
+        if ((Baralla1[i].numero != Baralla2[i].numero) || (Baralla1[i].pal != Baralla2[i].pal)) {
+            Canvis++;
+        }
+    }
+
+    if (Canvis == 14) {
+        TestCorrecte = TestCorrecte && true;
+        std::cout << "Comment :=>> Test Remenar: CORRECTE!" << std::endl << std::endl;
+
+    } else {
+        TestCorrecte = false;
+        std::cout << "Comment :=>> Test Remenar: ERROR - Revisa la funcio Remenar." << std::endl << std::endl;
+    }
+
+    return TestCorrecte;
 }
 
-void ReplacePlayedCard(Carta baralla[], int index_baralla, Jugador &jugador,
-                       int choice) {
-  if (index_baralla < NUM_CARTES) {
-    jugador.mao[choice] = baralla[index_baralla + 1];
-  } else {
-    jugador.mao[choice] = {0, 0};
-  }
+bool TestCompararCartes() {
+    std::cout << "Comment :=>>----- TEST: Funcio CompararCartes -----" << std::endl;
+    bool TestCorrecte = true;
+    Carta ComparacionsA[] = {{ORS, 1}, {ESPASES, 5}, {BASTONS, 3}, {COPES, 5}, {ESPASES, 5}};
+    Carta ComparacionsB[] = {{ORS, 2}, {ESPASES, 4}, {ORS, 3}, {COPES, 5}, {COPES, 5}};
+    bool resultat[] = {false, true, false, false, true};
+
+    for(int index = 0; index < 5; index++) {
+        bool resultat_comparacio = CompararCartes(ComparacionsA[index], ComparacionsB[index]);
+        if(resultat_comparacio != resultat[index]) {
+            TestCorrecte = false;
+        }
+    }
+    if(TestCorrecte)
+        std::cout << "Comment :=>> Test CompararCartes: CORRECTE!" << std::endl<<std::endl;
+    else
+        std::cout << "Comment :=>> Test CompararCartes: ERROR!" << std::endl<<std::endl;
+    return TestCorrecte;
 }
 
-void JugarRonda(Carta baralla[], int &index_baralla, Jugador &jugador,
-                Jugador &ordinador, int &punts_jugador, int &punts_ordinador) {
-  int player_choice = ObtainPlayerChoice(jugador);
-  Carta carta_jugador = jugador.mao[player_choice - 1];
 
-  int comp_choice = ComputerChoice(ordinador);
-  Carta carta_ordinador = ordinador.mao[comp_choice];
-
-  PlayCards(carta_jugador, carta_ordinador);
-
-  AccumulatePoints(carta_jugador, carta_ordinador, punts_jugador,
-                   punts_ordinador);
-
-  ReplacePlayedCard(baralla, index_baralla, jugador, player_choice - 1);
-  index_baralla++;
-  ReplacePlayedCard(baralla, index_baralla, ordinador, comp_choice);
-  index_baralla++;
+bool TestAgafarCarta() {
+    std::cout << "Comment :=>>----- TEST: Funcio AgafarCarta -----" << std::endl;
+    bool TestCorrecte = true;
+    Carta baralla[NUM_CARTES_BARALLA];
+    InicialitzarBarallaEspanyolaTest(baralla);
+    for (int index_pal = 0; index_pal < PALS_BARALLA; index_pal++)
+        for (int index_num = 0; index_num < NUMEROS_BARALLA; index_num++) {
+            Carta carta1 = AgafarCarta(baralla, NUM_CARTES_BARALLA);
+            Carta carta2 = {index_pal + 1, index_num + 1};
+            if(carta1.pal != carta2.pal || carta1.numero != carta2.numero)
+                TestCorrecte = false;
+        }
+    if(!TestCorrecte) {
+        std::cout << "Comment :=>> Test AgafarCarta: ERROR - Revisa la funcio AgafarCarta." << std::endl;
+    }
+    MostrarCartes(baralla, NUM_CARTES_BARALLA);
+    Carta carta = AgafarCarta(baralla, NUM_CARTES_BARALLA);
+    if(!EsCartaBuida(carta)) {
+        MostrarCarta(carta);
+        TestCorrecte = false;
+        std::cout << "Comment :=>> Test Remenar: ERROR - Revisa la funcio AgafarCarta. Que passa quan no hi han cartes?"
+                  << std::endl;
+    }
+    if(TestCorrecte)
+        std::cout << "Comment :=>> Test AgafarCarta: CORRECTE!" << std::endl<<std::endl;
+    else
+        std::cout << "Comment :=>> Test AgafarCarta: ERROR!" << std::endl<<std::endl;
+    return TestCorrecte;
 }
+
+bool TestInicialitzar() {
+    bool TestCorrecte = true;
+    return TestCorrecte;
+}
+
+bool TestSubstituirCarta() {
+    bool TestCorrecte = true;
+    return TestCorrecte;
+}
+
+bool TestAfegirCarta() {
+    bool TestCorrecte = true;
+    return TestCorrecte;
+}
+
+bool TestSeleccioHuma() {
+    bool TestCorrecte = true;
+    return TestCorrecte;
+}
+
+bool TestSeleccioOrdinador() {
+    bool TestCorrecte = true;
+    return TestCorrecte;
+}
+
+bool TestPuntsCartes() {
+    bool TestCorrecte = true;
+    return TestCorrecte;
+}
+
 
 int main() {
-  srand(0);
+    int grade = 0;
+    bool resultatTest;
+    resultatTest = TestInicalitzarBaralla();
+    if(resultatTest)
+        grade += 5;
 
-  Carta baralla[NUM_CARTES];
-  InicialitzarBaralla(baralla);
-  Remenar(baralla, 1000);
 
-  int index_baralla = 0;
-  Jugador jugador;
-  Jugador ordinador;
+    resultatTest = TestCartaBuida();
+    if(resultatTest)
+        grade += 5;
 
-  RepartirCartes(baralla, jugador, ordinador);
-  index_baralla += CARTES_PER_JUGADOR * 2;
-  std::cout << index_baralla << std::endl;
+    resultatTest = TestIndexCarta();
+    if(resultatTest)
+        grade += 10;
 
-  int punts_jugador = 0;
-  int punts_ordinador = 0;
-  int ronda = 0;
+    resultatTest = TestIntercanviar();
+    if(resultatTest)
+        grade += 5;
 
-  do {
-    std::cout << "Ronda " << ronda + 1 << ":\n";
-    JugarRonda(baralla, index_baralla, jugador, ordinador, punts_jugador,
-               punts_ordinador);
-    ronda++;
-  } while (AreThereCardsLeft(jugador, ordinador));
+    resultatTest = TestRemenar();
+    if(resultatTest)
+        grade += 5;
 
-  std::cout << "Punts jugador: " << punts_jugador << std::endl;
-  std::cout << "Punts ordinador: " << punts_ordinador << std::endl;
+    resultatTest = TestAgafarCarta();
+    if(resultatTest)
+        grade += 5;
 
-  if (punts_jugador > punts_ordinador) {
-    std::cout << "Jugador guanya el joc!\n";
-  } else if (punts_jugador < punts_ordinador) {
-    std::cout << "Ordinador guanya el joc!\n";
-  } else {
-    std::cout << "Empat!\n";
-  }
+    resultatTest = TestCompararCartes();
+    if(resultatTest)
+        grade += 5;
 
-  return 0;
+    std::cout << "Grade :=>> " << grade << std::endl;
 }

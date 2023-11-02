@@ -47,8 +47,8 @@ bool CompararCartes(Carta carta1, Carta carta2);
 void AfegirCarta(Carta cartes[], int nCartes, Carta carta);
 void SubstituirCartaBuida(Carta fontCartes[], int nCartesFont, Carta receptorCartes[], int nCartesReceptor);
 
-Carta ObtindreSeleccioHuma(Jugador& jugador);
-Carta SeleccioOrdinador(Jugador& ordinador, Carta carta_jugador);
+Carta ObtindreSeleccioHuma(Jugador& jugador, int nCartes);
+Carta SeleccioOrdinador(Jugador& ordinador, int nCartes, Carta carta_jugador);
 int PuntsCartes(Carta cartes[], int nCartes);
 int JugarRonda(Carta baralla[], Jugador &jugador, Jugador &ordinador, bool es_ordinador_primer);
 void JugarLaMajor(Carta baralla[], Jugador& huma, Jugador& ordinador);

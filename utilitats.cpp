@@ -5,6 +5,11 @@ int Aleatori(int NumMin, int NumMax) {
     return NumMin + (rand() % (NumMax - NumMin + 1));
 }
 
+void Inicialitzar(Carta cartes[], int nCartes) {
+    for (int index = 0; index < nCartes; index++)
+        cartes[index] = Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
+}
+
 void InicialitzarBarallaEspanyola(Carta baralla[]) {
     for (int index_pal = 0; index_pal < PALS_BARALLA; index_pal++)
         for (int index_num = 0; index_num < NUMEROS_BARALLA; index_num++)
@@ -120,9 +125,7 @@ void OrdenarCartes(Carta cartes[], int nCartes) {
         for (int j = 0; j < nCartes - i - 1; j++) {
             if (CompararCartes(cartes[j + 1], cartes[j])) /* orden ascendente */
             {
-                t = cartes[j];
-                cartes[j] = cartes[j + 1];
-                cartes[j + 1] = t;
+                Intercanviar(cartes[j + 1], cartes[j]);
             }
         }
     }
@@ -140,7 +143,7 @@ void SubstituirCartaBuida(Carta fontCartes[], int nCartesFont, Carta receptorCar
 }
 
 
-Carta ObtindreSeleccioHuma(Jugador& jugador) {
+Carta ObtindreSeleccioHuma(Jugador& jugador, int nCartes) {
     std::cout << "Les teves cartes són: \n";
     for (int i = 0; i < CARTES_PER_JUGADOR; i++) {
         if(!EsCartaBuida(jugador.ma[i])) {
@@ -151,13 +154,14 @@ Carta ObtindreSeleccioHuma(Jugador& jugador) {
     int choice;
     std::cout << "Tria una carta per jugar: " << std::endl;
     std::cin >> choice;
-
-    while (std::cin.fail() || choice <= 0 || choice > CARTES_PER_JUGADOR ||
-           jugador.ma[choice - 1].numero == 0) {
-        std::cin.clear();
-        std::cin.ignore(INT_MAX, '\n');
+    std::cout << "Carta Seleccionada: " << choice << std::endl;
+    while (std::cin.fail() || choice < 1 || choice > nCartes ||
+            EsCartaBuida(jugador.ma[choice-1])) {
+        //std::cin.clear();
+        //std::cin.ignore(INT_MAX, '\n');
         std::cout << "Elecció no vàlida. Torna a triar: " << std::endl;
         std::cin >> choice;
+        std::cout << "Seleccio: " << choice << std::endl;
     }
     choice--;
     std::cout << "Opcio: "<< choice<< std::endl;
@@ -167,11 +171,30 @@ Carta ObtindreSeleccioHuma(Jugador& jugador) {
     return carta;
 }
 
-Carta SeleccioOrdinador(Jugador& ordinador, Carta carta_jugador) {
+Carta SeleccioOrdinador(Jugador& ordinador, int nCartes, Carta carta_jugador) {
     std::cout << "Cartes Ordinador: "<<std::endl;
+    int index = 0;
     MostrarCartes(ordinador.ma, CARTES_PER_JUGADOR);
-    Carta carta = ordinador.ma[1];
-    ordinador.ma[1] = Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
+    if(EsCartaBuida(carta_jugador)) {
+        index = 0;
+    }
+    else {
+        bool carta_major = false;
+        for(int j = 0; j < CARTES_PER_JUGADOR; j++) {
+            if(CompararCartes(ordinador.ma[j], carta_jugador)) {
+                index = j;
+                carta_major = true;
+                break;
+            }
+        }
+        if(!carta_major) {
+            index = IndexCartaSenseValor(ordinador.ma, nCartes);
+            if(index == INDEX_NO_TROBAT)  index = nCartes - 1;
+            else index = index-1;
+        }
+    }
+    Carta carta = ordinador.ma[index];
+    ordinador.ma[index] = Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT};
     OrdenarCartes(ordinador.ma, CARTES_PER_JUGADOR);
     return carta;
 }
@@ -180,7 +203,7 @@ Carta SeleccioOrdinador(Jugador& ordinador, Carta carta_jugador) {
 int PuntsCartes(Carta cartes[], int nCartes) {
     int punts_totals = 0;
     int index = 0;
-    while(!EsCartaBuida(cartes[index]) && (index <= nCartes)) {
+    while(!EsCartaBuida(cartes[index]) && (index < nCartes)) {
         punts_totals += cartes[index].numero;
         index++;
     }
@@ -190,9 +213,8 @@ int PuntsCartes(Carta cartes[], int nCartes) {
 void MostrarJugada(Carta carta_jugador, Carta carta_ordinador) {
     std::cout << "Jugues: ";
     MostrarCarta(carta_jugador);
-    std::cout << "\nL'ordinador juga: ";
+    std::cout << "L'ordinador juga: ";
     MostrarCarta(carta_ordinador);
-    std::cout << std::endl;
 }
 
 void RepartirCartes(Carta cartes[], int nCartes, Jugador &jugador, Jugador &ordinador, int cartesRepartir) {
@@ -203,25 +225,27 @@ void RepartirCartes(Carta cartes[], int nCartes, Jugador &jugador, Jugador &ordi
     }
 }
 
-int JugarRonda(Carta baralla[], Jugador &jugador, Jugador &ordinador, bool es_ordinador_primer) {
+int JugarRonda(Carta baralla[], Jugador &huma, Jugador &ordinador, bool es_ordinador_primer) {
     int resultat_ronda;
     Carta carta_usuari;
     Carta carta_ordinador;
+    OrdenarCartes(huma.ma, CARTES_PER_JUGADOR);
+    OrdenarCartes(ordinador.ma, CARTES_PER_JUGADOR);
     if(es_ordinador_primer) {
-        carta_ordinador = SeleccioOrdinador(ordinador, Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT});
-        carta_usuari = ObtindreSeleccioHuma(jugador);
+        carta_ordinador = SeleccioOrdinador(ordinador, CARTES_PER_JUGADOR, Carta{PAL_CARTA_BUIT, NUMERO_CARTA_BUIT});
+        carta_usuari = ObtindreSeleccioHuma(huma, CARTES_PER_JUGADOR);
     }
     else {
-        carta_usuari = ObtindreSeleccioHuma(jugador);
-        carta_ordinador = SeleccioOrdinador(ordinador, carta_usuari);
+        carta_usuari = ObtindreSeleccioHuma(huma, CARTES_PER_JUGADOR);
+        carta_ordinador = SeleccioOrdinador(ordinador, CARTES_PER_JUGADOR, carta_usuari);
     }
     MostrarJugada(carta_usuari, carta_ordinador);
     if(CompararCartes(carta_usuari, carta_ordinador)) {
         //Guardar punts Huma
         std::cout << "Guanya Huma!"<<std::endl;
         resultat_ronda = GUANYA_HUMA;
-        AfegirCarta(jugador.pila, NUM_CARTES_BARALLA, carta_usuari);
-        AfegirCarta(jugador.pila, NUM_CARTES_BARALLA, carta_ordinador);
+        AfegirCarta(huma.pila, NUM_CARTES_BARALLA, carta_usuari);
+        AfegirCarta(huma.pila, NUM_CARTES_BARALLA, carta_ordinador);
     }
     else {
         //Guardar Punts Ordinador
@@ -231,37 +255,38 @@ int JugarRonda(Carta baralla[], Jugador &jugador, Jugador &ordinador, bool es_or
         resultat_ronda = GUANYA_ORDINADOR;
     }
     std::cout << "Pila Huma: "<<std::endl;
-    MostrarCartes(jugador.pila, NUM_CARTES_BARALLA);
+    MostrarCartes(huma.pila, NUM_CARTES_BARALLA);
     std::cout << "Pila Ordinador: "<<std::endl;
     MostrarCartes(ordinador.pila, NUM_CARTES_BARALLA);
     //AcumularPunts(carta_jugador, carta_ordinador, punts_jugador,
     //                punts_ordinador);
 
-    SubstituirCartaBuida(baralla, NUM_CARTES_BARALLA, jugador.ma, CARTES_PER_JUGADOR);
+    SubstituirCartaBuida(baralla, NUM_CARTES_BARALLA, huma.ma, CARTES_PER_JUGADOR);
     SubstituirCartaBuida(baralla, NUM_CARTES_BARALLA, ordinador.ma, CARTES_PER_JUGADOR);
 
     return resultat_ronda;
 }
 
 void JugarLaMajor(Carta baralla[], Jugador& huma, Jugador& ordinador) {
-    InicialitzarBarallaEspanyola(baralla);
+    Inicialitzar(huma.ma, CARTES_PER_JUGADOR);
+    Inicialitzar(ordinador.ma, CARTES_PER_JUGADOR);
     Inicialitzar(huma.pila, NUM_CARTES_BARALLA);
     Inicialitzar(ordinador.pila, NUM_CARTES_BARALLA);
 
     Remenar(baralla, NUM_CARTES_BARALLA, 1000);
     RepartirCartes(baralla, NUM_CARTES_BARALLA, huma, ordinador, CARTES_PER_JUGADOR);
-    OrdenarCartes(huma.ma, CARTES_PER_JUGADOR);
-    OrdenarCartes(ordinador.ma, CARTES_PER_JUGADOR);
     bool es_ordinador_primer = false;
 
     int ronda = 0;
 
     do {
-        std::cout << "Ronda " << ronda + 1 << ":\n";
+        std::cout << "#######################"<<std::endl;
+        std::cout << "Ronda " << ronda + 1<<std::endl;
         int resultat_ronda = JugarRonda(baralla, huma, ordinador, es_ordinador_primer);
         if (resultat_ronda == GUANYA_ORDINADOR) es_ordinador_primer = true;
         else es_ordinador_primer = false;
         ronda++;
         std::cout << "Ronda: "<< ronda<<" Cartes: "<< IndexCartaAmbValor(baralla, NUM_CARTES_BARALLA) << " Cartes: " << NUM_CARTES_BARALLA<<std::endl;
-    } while (IndexCartaAmbValor(baralla, NUM_CARTES_BARALLA) < NUM_CARTES_BARALLA);
+        std::cout << "#######################"<<std::endl;
+    } while (IndexCartaAmbValor(huma.ma, CARTES_PER_JUGADOR) != INDEX_NO_TROBAT);
 }
